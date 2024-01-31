@@ -118,10 +118,25 @@ const retweetPost = asyncHandler(async (req, res, next) => {
 	}
 });
 
+/**
+ * @route POST /api/post/search
+ * @desc search for a post
+ * @access private
+ */
+const search = asyncHandler(async (req, res, next) => {
+	const searchTerm = req.query.term;
+	const results = await Post.find({
+		$or: [{ content: { $regex: searchTerm, $options: 'i' } }],
+	});
+
+	res.status(200).json({ data: results });
+});
+
 module.exports = {
 	newPost,
 	likePost,
 	deletePost,
 	commentPost,
 	retweetPost,
+	search,
 };

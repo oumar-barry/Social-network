@@ -79,8 +79,26 @@ const follow = asyncHandler(async (req, res, next) => {
 	res.status(200).json({ data: { user, me: req.user } });
 });
 
+/**
+ * @route POST /api/user/search
+ * @desc search for a user
+ * @access private
+ */
+const search = asyncHandler(async (req, res, next) => {
+	const searchTerm = req.query.term;
+	const results = await User.find({
+		$or: [
+			{ username: { $regex: searchTerm, $options: 'i' } },
+			{ firstname: { $regex: searchTerm, $options: 'i' } },
+		],
+	});
+
+	res.status(200).json({ data: results });
+});
+
 module.exports = {
 	register,
 	login,
 	follow,
+	search,
 };
