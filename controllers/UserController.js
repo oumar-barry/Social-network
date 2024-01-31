@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
+const ErrorResponse = require('../utils/ErrorResponse');
 
 /**
  * @route /api/user/register
@@ -19,8 +20,27 @@ const register = asyncHandler(async (req, res, next) => {
  * @desc login a user
  * @access public
  */
-const login = asyncHandler(async (req, res, next) => {});
+const login = asyncHandler(async (req, res, next) => {
+	const { credential, password } = req.body;
+	const user = await User.findOne({
+		$or: [{ username: credential }, { email: credential }],
+	});
+
+	if (!user) {
+		return next(new ErrorResponse('Invalid credentials / password ', 404));
+	}
+
+	if (!(await user.matchPassword(password))) {
+		return next(new ErrorResponse('Invalid credentials / password ', 404));
+	}
+
+	const { token, options } = user.generateToken();
+
+	res.cookie('token', token, options);
+	res.status(201).json({ data: user });
+});
 
 module.exports = {
 	register,
+	login,
 };
