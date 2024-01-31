@@ -61,8 +61,25 @@ const deletePost = asyncHandler(async (req, res, next) => {
 	res.status(204).json({ data: {} });
 });
 
+/**
+ * @route POST /api/post/:id/comment
+ * @desc comment a post
+ * @access private
+ */
+const commentPost = asyncHandler(async (req, res, next) => {
+	//check if post exists
+	const post = await Post.findById(req.params.id);
+	if (!post) return next(new ErrorResponse('Post not found', 404));
+	req.body.user = req.user._id;
+	req.body.replyTo = req.params.id;
+	const newPost = await Post.create(req.body);
+
+	res.status(201).json({ data: newPost });
+});
+
 module.exports = {
 	newPost,
 	likePost,
 	deletePost,
+	commentPost,
 };
