@@ -34,10 +34,35 @@ const likePost = asyncHandler(async (req, res, next) => {
 
 	await post.save();
 
-	res.status(201).json({ data: post });
+	res.status(200).json({ data: post });
+});
+
+/**
+ * @route DELETE /api/post/:id
+ * @desc delete a post
+ * @access private
+ */
+const deletePost = asyncHandler(async (req, res, next) => {
+	//check if post exists
+	const post = await Post.findById(req.params.id);
+	if (!post) return next(new ErrorResponse('Post not found', 404));
+
+	if (post.user.toString() != req.user._id) {
+		return next(
+			new ErrorResponse(
+				"You can't delete this post, operation reserved to the owner",
+				403
+			)
+		);
+	}
+
+	await Post.findByIdAndDelete(post._id);
+
+	res.status(204).json({ data: {} });
 });
 
 module.exports = {
 	newPost,
 	likePost,
+	deletePost,
 };
