@@ -4,5 +4,5 @@ const { protect } = require('../middleware/auth');
 
 const { register, login } = require('../controllers/UserController');
 router.post('/register', register);
-router.post('/login', protect, login);
+router.post('/login', login);
 module.exports = router;
