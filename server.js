@@ -11,7 +11,7 @@ const connectDb = require('./config/database');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
+app.use(cookieParser());
 app.use('/api/user', require('./routes/userRoute'));
 
 if (process.env.NODE_ENV == 'development') {
