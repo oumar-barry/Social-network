@@ -2,6 +2,8 @@ const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
 const Post = require('../models/Post');
 const ErrorResponse = require('../utils/ErrorResponse');
+const path = require('path');
+const fs = require('fs');
 
 /**
  * @route /api/user/register
@@ -149,6 +151,106 @@ const getProfile = asyncHandler(async (req, res, next) => {
 	res.status(200).json({ data: user });
 });
 
+/**
+ * @route GET /api/user/:userId/following
+ * @desc get a user's following
+ * @access private
+ */
+const getFollowing = asyncHandler(async (req, res, next) => {
+	const user = await User.findById(req.params.userId).populate('following');
+	if (!user) {
+		return next(new ErrorResponse('User not found ', 404));
+	}
+	res.status(200).json({ data: user.following });
+});
+
+/**
+ * @route GET /api/user/:userId/followers
+ * @desc get a user's followers
+ * @access private
+ */
+const getFollowers = asyncHandler(async (req, res, next) => {
+	const user = await User.findById(req.params.userId).populate('followers');
+	if (!user) {
+		return next(new ErrorResponse('User not found ', 404));
+	}
+	res.status(200).json({ data: user.followers });
+});
+
+/**
+ * @route POST /api/user/upload/profile-picture
+ * @desc upload a profile picture
+ * @access private
+ */
+const uploadProfilePicture = asyncHandler(async (req, res, next) => {
+	if (req.file.size > process.env.MAX_PROFILE_PICTURE_SIZE) {
+		return next(new ErrorResponse('Only 10MB file size is allowed ', 400));
+	}
+
+	if (!req.file.mimetype.startsWith('image/')) {
+		return next(new ErrorResponse('Please select an image ', 400));
+	}
+
+	const filePath = `${req.file.path}-${Date.now()}${path.extname(
+		req.file.originalname
+	)}`;
+
+	const tempPath = req.file.path;
+	const targetPath = path.join(__dirname, '../', filePath);
+	fs.rename(tempPath, targetPath, async (error) => {
+		if (error) {
+			return next(
+				new ErrorResponse('Somethign went wrong while uploading ', 400)
+			);
+		}
+
+		req.user = await User.findByIdAndUpdate(
+			req.user._id,
+			{ profile: filePath },
+			{ new: true }
+		);
+
+		res.status(200).sendFile(path.join(__dirname, '../', filePath));
+	});
+});
+
+/**
+ * @route POST /api/user/upload/cover-picture
+ * @desc upload a cover picture
+ * @access private
+ */
+const uploadCoverPicture = asyncHandler(async (req, res, next) => {
+	if (req.file.size > process.env.MAX_PROFILE_PICTURE_SIZE) {
+		return next(new ErrorResponse('Only 10MB file size is allowed ', 400));
+	}
+
+	if (!req.file.mimetype.startsWith('image/')) {
+		return next(new ErrorResponse('Please select an image ', 400));
+	}
+
+	const filePath = `${req.file.path}-${Date.now()}${path.extname(
+		req.file.originalname
+	)}`;
+
+	const tempPath = req.file.path;
+	const targetPath = path.join(__dirname, '../', filePath);
+	fs.rename(tempPath, targetPath, async (error) => {
+		if (error) {
+			return next(
+				new ErrorResponse('Somethign went wrong while uploading ', 400)
+			);
+		}
+
+		req.user = await User.findByIdAndUpdate(
+			req.user._id,
+			{ cover: filePath },
+			{ new: true }
+		);
+
+		res.status(200).sendFile(path.join(__dirname, '../', filePath));
+	});
+});
+
 module.exports = {
 	register,
 	login,
@@ -157,4 +259,8 @@ module.exports = {
 	newsfeed,
 	getMe,
 	getProfile,
+	getFollowing,
+	getFollowers,
+	uploadProfilePicture,
+	uploadCoverPicture,
 };
