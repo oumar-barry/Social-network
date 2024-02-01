@@ -120,10 +120,41 @@ const newsfeed = asyncHandler(async (req, res, next) => {
 	res.status(200).json({ data: results });
 });
 
+/**
+ * @route GET /api/user/me
+ * @desc get logged in user profile
+ * @access private
+ */
+const getMe = asyncHandler(async (req, res, next) => {
+	// perform later a find and populate fields if needed
+	const following = req.user.following.length;
+	const followers = req.user.followers.length;
+	const posts = req.user.posts.length;
+	const retweets = req.user.retweets.length;
+	res
+		.status(200)
+		.json({ data: req.user, following, followers, posts, retweets });
+});
+
+/**
+ * @route GET /api/user/:userId/profile
+ * @desc get a user profile
+ * @access private
+ */
+const getProfile = asyncHandler(async (req, res, next) => {
+	const user = await User.findById(req.params.userId);
+	if (!user) {
+		return next(new ErrorResponse('User not found ', 404));
+	}
+	res.status(200).json({ data: user });
+});
+
 module.exports = {
 	register,
 	login,
 	follow,
 	search,
 	newsfeed,
+	getMe,
+	getProfile,
 };
