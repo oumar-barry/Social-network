@@ -13,7 +13,7 @@ exports.protect = asyncHandler(async (req, res, next) => {
 	if (!token) return next(new ErrorResponse('Unauthorized request', 401));
 
 	try {
-		const decoded = jwt.verify(token, process.env.JWT_SECRET);
+		const decoded = jwt.verify(token, process.env.  JWT_SECRET);
 		req.user = await User.findById(decoded.id);
 
 		next();
