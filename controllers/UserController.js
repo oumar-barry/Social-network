@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
+const Post = require('../models/Post');
 const ErrorResponse = require('../utils/ErrorResponse');
 
 /**
@@ -96,9 +97,33 @@ const search = asyncHandler(async (req, res, next) => {
 	res.status(200).json({ data: results });
 });
 
+/**
+ * @route POST /api/user/newsfeed
+ * @desc get logged in user newsfeed
+ * @access private
+ */
+const newsfeed = asyncHandler(async (req, res, next) => {
+	let followingIds = [];
+	if (req.user.following && req.user.following.length != 0) {
+		followingIds = req.user.following.map((user) => user.toString());
+		followingIds.push(req.user._id.toString());
+	}
+
+	const results = await Post.find({
+		user: { $in: followingIds },
+	})
+		.populate('user')
+		.populate('replyTo')
+		.populate('retweet')
+		.sort({ postedOn: -1 });
+
+	res.status(200).json({ data: results });
+});
+
 module.exports = {
 	register,
 	login,
 	follow,
 	search,
+	newsfeed,
 };
