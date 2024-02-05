@@ -251,6 +251,32 @@ const uploadCoverPicture = asyncHandler(async (req, res, next) => {
 	});
 });
 
+/**
+ * @route PUT /api/user/close-account
+ * @desc close a user account
+ * @access private
+ */
+const closeAccount = asyncHandler(async (req, res, next) => {
+	await User.findByIdAndUpdate(req.user._id, { closed: true });
+	//expire the token later
+	res.sendStatus(200);
+});
+
+/**
+ * @route PUT /api/user/update-profile
+ * @desc update user information
+ * @access private
+ */
+const updateProfile = asyncHandler(async (req, res, next) => {
+	// If needed some checking later
+	req.user = await User.findByIdAndUpdate(req.user._id, req.body, {
+		new: true,
+		runValidators: true,
+	});
+
+	res.status(200).json({ data: req.user });
+});
+
 module.exports = {
 	register,
 	login,
@@ -263,4 +289,6 @@ module.exports = {
 	getFollowers,
 	uploadProfilePicture,
 	uploadCoverPicture,
+	closeAccount,
+	updateProfile,
 };
