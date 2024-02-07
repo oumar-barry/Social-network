@@ -4,9 +4,9 @@ const asyncHandler = require('express-async-handler');
  * A middleware that intercepts mongoose errors for validation
  *
  */
-exports.errorHandler = asyncHandler((req, res, next) => {
-	console.log('printing the errors ');
-	console.log(err);
+exports.errorHandler = (err, req, res, next) => {
+	//console.log('printing the errors ');
+	//console.log(err);
 
 	let error = { ...err };
 
@@ -33,6 +33,6 @@ exports.errorHandler = asyncHandler((req, res, next) => {
 
 	res.status(error.statusCode || 500).json({
 		success: false,
-		error: error.message || 'Internale server error ',
+		error: error.message || 'Internal server error ',
 	});
-});
+};

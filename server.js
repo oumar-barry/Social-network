@@ -8,12 +8,14 @@ const cookieParser = require('cookie-parser');
 const { errorHandler } = require('./middleware/error');
 dotenv.config({ path: 'config/config.env' });
 const connectDb = require('./config/database');
+const { protect } = require('./middleware/auth');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use('/api/user', require('./routes/userRoute'));
 app.use('/api/post', require('./routes/postRoute'));
+app.use('/api/chat', require('./routes/chatRoute'));
 
 if (process.env.NODE_ENV == 'development') {
 	app.use(morgan('dev'));
