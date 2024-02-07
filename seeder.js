@@ -4,10 +4,13 @@ const User = require('./models/User');
 const { faker } = require('@faker-js/faker');
 dotenv.config({ path: './config/config.env' });
 const colors = require('colors');
+const Chat = require('./models/Chat');
+const Message = require('./models/Message');
 connectDb();
 const deleteData = async () => {
 	try {
-		await User.deleteMany({});
+		await Chat.deleteMany({});
+		await Message.deleteMany({});
 		console.log(`Data deleted successfully `.bold.red);
 	} catch (err) {
 		console.error(err);
