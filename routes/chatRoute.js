@@ -9,6 +9,8 @@ const {
 	addUsers,
 	getInbox,
 	getLastMessage,
+	deleteMessage,
+	leaveChat,
 } = require('../controllers/ChatController');
 
 router.get('/inbox', protect, getInbox);
@@ -17,5 +19,7 @@ router.post('/:id', protect, sendMessage);
 router.get('/:id', protect, getChat);
 router.get('/:id/add-user', protect, addUsers);
 router.get('/:id/last-message', protect, getLastMessage);
+router.delete('/:messageId/delete-message', protect, deleteMessage);
+router.put('/:id/leave', protect, leaveChat);
 
 module.exports = router;
