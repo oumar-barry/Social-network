@@ -127,9 +127,60 @@ const addUsers = asyncHandler(async (req, res, next) => {
 	}
 });
 
+/**
+ * @route GET /api/chat/inbox
+ * @desc get the logged in user inbox
+ * @access private
+ */
+const getInbox = asyncHandler(async (req, res, next) => {
+	const inbox = await Chat.find({
+		users: { $in: req.user.id },
+	})
+		.populate({ path: 'users', select: 'firstname lastname username profile' })
+		/*.populate({
+			path: 'lastMessage',
+			populate: {
+				path: 'sender',
+				select: 'firstname lastname username profile',
+				model: 'User',
+			},
+		})*/
+		.sort({ updatedAt: -1 });
+
+	res.status(200).json({ data: inbox });
+});
+
+/**
+ * @route GET /api/chat/:id/last-message
+ * @desc get the last message from of a chat
+ * @access private
+ */
+const getLastMessage = asyncHandler(async (req, res, next) => {
+	const chat = await Chat.findById(req.params.id);
+	if (!chat) {
+		return next(new ErrorResponse('Chat not found ', 404));
+	}
+
+	//if his not part of the chat
+	if (!chat.users.some((user) => user.toString() == req.user.id)) {
+		return next(
+			new ErrorResponse('User is not is a member of this chat ', 403)
+		);
+	}
+
+	const message = await Message.findById(chat.lastMessage).populate({
+		path: 'sender',
+		select: 'firstname lastname username profile',
+	});
+
+	res.status(200).json({ data: message });
+});
+
 module.exports = {
 	newChat,
 	sendMessage,
 	getChat,
 	addUsers,
+	getInbox,
+	getLastMessage,
 };

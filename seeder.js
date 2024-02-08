@@ -24,7 +24,7 @@ const fakeUsers = async () => {
 			let data = {
 				firstname: faker.person.firstName(),
 				lastname: faker.person.lastName(),
-				username: `${faker.person.firstName()}${faker.person.lastName()}}`,
+				username: `${faker.person.firstName()}${faker.person.lastName()}`,
 				password: '12345',
 			};
 
