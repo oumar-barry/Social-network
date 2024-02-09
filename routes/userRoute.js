@@ -19,6 +19,7 @@ const {
 	uploadCoverPicture,
 	closeAccount,
 	updateProfile,
+	logout,
 } = require('../controllers/UserController');
 
 router.post('/register', register);
@@ -45,5 +46,6 @@ router.post(
 );
 router.put('/close-account', protect, closeAccount);
 router.put('/update-profile', protect, updateProfile);
+router.post('/logout', protect, logout);
 
 module.exports = router;

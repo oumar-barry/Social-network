@@ -281,6 +281,16 @@ const updateProfile = asyncHandler(async (req, res, next) => {
 	res.status(200).json({ data: req.user });
 });
 
+/**
+ * @route POST /api/user/logout
+ * @desc logout the current user
+ * @access private
+ */
+const logout = asyncHandler(async (req, res, next) => {
+	res.cookie('token', null);
+	res.sendStatus(200);
+});
+
 module.exports = {
 	register,
 	login,
@@ -295,4 +305,5 @@ module.exports = {
 	uploadCoverPicture,
 	closeAccount,
 	updateProfile,
+	logout,
 };
