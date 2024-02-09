@@ -15,6 +15,10 @@ const MessageSchema = new mongoose.Schema({
 		type: mongoose.Schema.ObjectId,
 		ref: 'Chat',
 	},
+	removed: {
+		type: Boolean,
+		default: false,
+	},
 	postedAt: {
 		type: Date,
 		default: Date.now(),
