@@ -232,6 +232,29 @@ const leaveChat = asyncHandler(async (req, res, next) => {
 	res.status(200).json({ data: chat });
 });
 
+/**
+ * @route PUT /api/chat/:id/update-title
+ * @desc update a chat title
+ * @access private
+ */
+const updateChatTitle = asyncHandler(async (req, res, next) => {
+	let chat = await Chat.findById(req.params.id);
+	if (!chat) {
+		return next(new ErrorResponse('Chat not found ', 404));
+	}
+
+	if (chat.createdBy.toString() != req.user.id) {
+		return next(
+			new ErrorResponse("Can't not update chat title, only chat admin", 403)
+		);
+	}
+
+	chat.title = req.body.title;
+	await chat.save();
+
+	res.status(200).json({ data: chat });
+});
+
 module.exports = {
 	newChat,
 	sendMessage,
@@ -241,4 +264,5 @@ module.exports = {
 	getLastMessage,
 	deleteMessage,
 	leaveChat,
+	updateChatTitle,
 };

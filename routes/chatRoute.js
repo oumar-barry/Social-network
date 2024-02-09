@@ -11,6 +11,7 @@ const {
 	getLastMessage,
 	deleteMessage,
 	leaveChat,
+	updateChatTitle,
 } = require('../controllers/ChatController');
 
 router.get('/inbox', protect, getInbox);
@@ -21,5 +22,6 @@ router.get('/:id/add-user', protect, addUsers);
 router.get('/:id/last-message', protect, getLastMessage);
 router.delete('/:messageId/delete-message', protect, deleteMessage);
 router.put('/:id/leave', protect, leaveChat);
+router.put('/:id/update-title', protect, updateChatTitle);
 
 module.exports = router;
