@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
 const Post = require('../models/Post');
+const Notification = require('../models/Notification');
 const ErrorResponse = require('../utils/ErrorResponse');
 const path = require('path');
 const fs = require('fs');
@@ -77,6 +78,9 @@ const follow = asyncHandler(async (req, res, next) => {
 	);
 
 	//Send notification later
+	if (!isFollowing) {
+		Notification.insert(req.user.id, user._id, 'follow');
+	}
 
 	//Only return the current logged in user later
 	res.status(200).json({ data: { user, me: req.user } });

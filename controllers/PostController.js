@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const Post = require('../models/Post');
 const ErrorResponse = require('../utils/ErrorResponse');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 
 /**
  * @route POST /api/post/new
@@ -31,6 +32,7 @@ const likePost = asyncHandler(async (req, res, next) => {
 		});
 	} else {
 		post.likes.unshift(req.user._id);
+		Notification.insert(req.user.id, post.user, 'like', post.id);
 	}
 
 	await post.save();
@@ -73,8 +75,11 @@ const commentPost = asyncHandler(async (req, res, next) => {
 	if (!post) return next(new ErrorResponse('Post not found', 404));
 	req.body.user = req.user._id;
 	req.body.replyTo = req.params.id;
-	const newPost = await Post.create(req.body);
 
+	const newPost = await Post.create(req.body);
+	if (req.params.id) {
+		Notification.insert(req.user.id, post.user, 'comment', post.id);
+	}
 	res.status(201).json({ data: newPost });
 });
 

@@ -3,9 +3,10 @@ const Chat = require('../models/Chat');
 const Message = require('../models/Message');
 const ErrorResponse = require('../utils/ErrorResponse');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 
 /**
- * @route POST /api/chat/new-cuat
+ * @route POST /api/chat/new-chat
  * @desc start a group or regular chat
  * @access private
  */
@@ -19,9 +20,21 @@ const newChat = asyncHandler(async (req, res, next) => {
 		createdBy: req.user.id,
 	};
 
-	let chat = await (
-		await Chat.create(data)
-	).populate('users', 'firstname lastname username profile');
+	let chat = await Chat.create(data);
+	//notify chat users
+	await Promise.all(
+		chat.users.map((chatUser) => {
+			if (chatUser.toString() != req.user.id) {
+				Notification.insert(req.user.id, chatUser, 'added to chat', chat.id);
+			}
+		})
+	);
+
+	chat = await Chat.populate(chat, {
+		path: 'users',
+		select: 'firstname lastname username profile',
+	});
+
 	res.status(200).json({ data: chat });
 });
 
@@ -59,6 +72,7 @@ const sendMessage = asyncHandler(async (req, res, next) => {
 		readBy: req.user._id,
 	});
 	await message.save();
+
 	message = await Message.populate(message, {
 		path: 'readBy',
 		select: 'profile',
@@ -66,6 +80,14 @@ const sendMessage = asyncHandler(async (req, res, next) => {
 
 	chat.lastMessage = message._id;
 	await chat.save();
+	//Notify user(s) for new message
+	await Promise.all(
+		chat.users.map((chatUser) => {
+			if (chatUser.toString() != req.user.id) {
+				Notification.insert(req.user.id, chatUser, 'new message', chat.id);
+			}
+		})
+	);
 
 	res.status(200).json({ data: message });
 });
@@ -228,7 +250,7 @@ const leaveChat = asyncHandler(async (req, res, next) => {
 	await chat.save();
 
 	//Notify the admin that a user has left the chat
-
+	Notification.insert(req.user.id, chat.createdBy, 'left chat', chat.id);
 	res.status(200).json({ data: chat });
 });
 
