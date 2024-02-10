@@ -3,6 +3,8 @@ const Post = require('../models/Post');
 const ErrorResponse = require('../utils/ErrorResponse');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
+const path = require('path');
+const fs = require('fs');
 
 /**
  * @route POST /api/post/new
@@ -10,10 +12,65 @@ const Notification = require('../models/Notification');
  * @access private
  */
 const newPost = asyncHandler(async (req, res, next) => {
-	req.body.user = req.user._id;
+	if (req.body.content.trim() == '' && req.files.length == 0) {
+		return next(
+			new ErrorResponse(
+				'Please provide a content or at least one image for a new post',
+				400
+			)
+		);
+	}
+
 	// handle single or multiple image upload later
-	const post = await Post.create(req.body);
-	res.status(201).json({ data: post });
+	let post = new Post({
+		user: req.user.id,
+		content: req.body.content,
+	});
+
+	// this counter is going to help us for handling the error
+	//instead of using the break keyword inside of our loop
+	let counter = 0;
+	let imagesToUpload = [];
+	if (req.files.length != 0) {
+		req.files.forEach((file, index) => {
+			console.log(file);
+			if (!file.mimetype.startsWith('image/')) {
+				return next(
+					new ErrorResponse(`Please select an image, element ${index + 1}`, 400)
+				);
+			}
+
+			let filePath = `${file.path}-${Date.now()}${path.extname(
+				file.originalname
+			)}`;
+
+			let tempPath = file.path;
+			let targetPath = path.join(__dirname, '../', filePath);
+
+			imagesToUpload.unshift({ tempPath, targetPath });
+			post.images.unshift(filePath.replace('uploads/', ''));
+			counter++;
+		});
+	}
+
+	if (req.files.length != 0 && counter == req.files.length) {
+		//upload images before saving the post
+		imagesToUpload.forEach(({ tempPath, targetPath }) => {
+			fs.rename(tempPath, targetPath, async (error) => {
+				if (error) {
+					return next(
+						new ErrorResponse('Somethign went wrong while uploading ', 400)
+					);
+				}
+			});
+		});
+
+		await post.save();
+		res.status(201).json({ data: post });
+	} else if (req.files.length == 0 && post.content != '') {
+		await post.save();
+		res.status(201).json({ data: post });
+	}
 });
 
 /**
