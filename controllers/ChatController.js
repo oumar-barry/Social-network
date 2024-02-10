@@ -99,7 +99,11 @@ const sendMessage = asyncHandler(async (req, res, next) => {
  * @access private
  */
 const getChat = asyncHandler(async (req, res, next) => {
-	let chat = await Chat.findById(req.params.id);
+	let chat = await Chat.findOne({
+		_id: req.params.id,
+		users: { $in: [req.user.id] },
+	});
+
 	if (!chat) {
 		return next(new ErrorResponse('Chat not found ', 404));
 	}
@@ -110,6 +114,11 @@ const getChat = asyncHandler(async (req, res, next) => {
 	});
 
 	chat = await Message.populate(chat, { path: 'lastMessage' });
+	//mark all chat messages as readk
+	await Message.updateMany(
+		{ chat: chat.id },
+		{ $addToSet: { readBy: req.user.id } }
+	);
 	res.status(200).json({ data: chat });
 });
 
