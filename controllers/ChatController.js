@@ -71,6 +71,7 @@ const sendMessage = asyncHandler(async (req, res, next) => {
 		chat: chat._id,
 		readBy: req.user._id,
 	});
+
 	await message.save();
 
 	message = await Message.populate(message, {
@@ -277,6 +278,26 @@ const updateChatTitle = asyncHandler(async (req, res, next) => {
 	res.status(200).json({ data: chat });
 });
 
+/**
+ * @route GET /api/chat/unread-messages
+ * @desc get user's unread messages
+ * @access private
+ */
+const unreadMessages = asyncHandler(async (req, res, next) => {
+	//get all chats the user is part of
+	const chatIds = (await Chat.find({ users: { $in: [req.user.id] } })).map(
+		(chat) => chat.id
+	);
+
+	const unreadMessages = await Message.find({
+		chat: { $in: chatIds },
+		readBy: { $nin: [req.user.id] },
+	});
+	res
+		.status(200)
+		.json({ data: { total: unreadMessages.length, unreadMessages } });
+});
+
 module.exports = {
 	newChat,
 	sendMessage,
@@ -287,4 +308,5 @@ module.exports = {
 	deleteMessage,
 	leaveChat,
 	updateChatTitle,
+	unreadMessages,
 };

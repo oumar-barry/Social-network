@@ -4,7 +4,10 @@ const MessageSchema = new mongoose.Schema({
 		type: mongoose.Schema.ObjectId,
 		ref: 'User',
 	},
-	content: String,
+	content: {
+		type: String,
+		required: [true, 'The content of the message is required '],
+	},
 	readBy: [
 		{
 			type: mongoose.Schema.ObjectId,
@@ -23,6 +26,13 @@ const MessageSchema = new mongoose.Schema({
 		type: Date,
 		default: Date.now(),
 	},
+});
+
+MessageSchema.pre('find', function () {
+	this.populate({ path: 'chat', select: 'title' }).populate(
+		'sender',
+		'firstname lastname username profile'
+	);
 });
 
 // To be completed later, this is just for starting the project

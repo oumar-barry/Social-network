@@ -12,8 +12,10 @@ const {
 	deleteMessage,
 	leaveChat,
 	updateChatTitle,
+	unreadMessages,
 } = require('../controllers/ChatController');
 
+router.get('/unread-messages', protect, unreadMessages);
 router.get('/inbox', protect, getInbox);
 router.post('/new-chat', protect, newChat);
 router.post('/:id', protect, sendMessage);
