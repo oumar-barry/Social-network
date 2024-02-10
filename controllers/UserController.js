@@ -5,6 +5,7 @@ const Notification = require('../models/Notification');
 const ErrorResponse = require('../utils/ErrorResponse');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 /**
  * @route /api/user/register
@@ -291,6 +292,82 @@ const logout = asyncHandler(async (req, res, next) => {
 	res.sendStatus(200);
 });
 
+/**
+ * @route POST /api/user/forgot-password
+ * @desc get a link to reset the user password
+ * @access public
+ */
+const forgotPassword = asyncHandler(async (req, res, next) => {
+	const user = await User.findOne({
+		email: req.body.email,
+	});
+
+	if (!user) {
+		return next(new ErrorResponse('User not found ', 404));
+	}
+
+	const token = user.getResetPasswordToken();
+	await user.save();
+	const url = `${req.protocol}://${req.get(
+		'host'
+	)}/api/user/reset-password?token=${token} `;
+	console.log(url);
+	//Send the url via email
+	res.status(200).json({ data: { token } });
+});
+
+/**
+ * @route POST /api/user/reset-password
+ * @desc reset the user password after verifying the token
+ * @access public
+ */
+const resetPassword = asyncHandler(async (req, res, next) => {
+	if (!req.query.token) {
+		return next(new ErrorResponse('Reset token is required ', 400));
+	}
+
+	const hashedToken = crypto
+		.createHash('sha256')
+		.update(req.query.token)
+		.digest('hex');
+	const user = await User.findOne({
+		resetPasswordToken: hashedToken,
+		resetPasswordExpire: { $gte: Date.now() },
+	});
+
+	if (!user) {
+		return next(
+			new ErrorResponse(
+				'The token is invalid or has expired, resend again',
+				400
+			)
+		);
+	}
+
+	user.password = req.body.password;
+	await user.save();
+
+	// only send the message password reset successfully
+
+	res.status(200).json({ data: user });
+});
+
+/**
+ * @route PUT /api/user/update-password
+ * @desc update the logged in user password
+ * @access private
+ */
+const updatePassword = asyncHandler(async (req, res, next) => {
+	const user = await User.findById(req.user.id);
+	if (!user.matchPassword(req.body.oldPassword)) {
+		return next(new ErrorResponse('The old password is invalid ', 400));
+	}
+
+	user.password = req.body.newPassword;
+	await user.save();
+	res.status(200).json({ data: { message: 'Password updated successfully' } });
+});
+
 module.exports = {
 	register,
 	login,
@@ -306,4 +383,7 @@ module.exports = {
 	closeAccount,
 	updateProfile,
 	logout,
+	forgotPassword,
+	resetPassword,
+	updatePassword,
 };

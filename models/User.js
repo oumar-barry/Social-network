@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 const UserSchema = new mongoose.Schema(
 	{
@@ -37,6 +38,8 @@ const UserSchema = new mongoose.Schema(
 		password: {
 			type: String,
 			require: [true, 'password is required '],
+			minLength: [2, 'Password must be at least 2 characters '],
+			maxLength: [100, 'Password must be at most 100 characters '],
 		},
 		following: [
 			{
@@ -80,6 +83,14 @@ const UserSchema = new mongoose.Schema(
 			type: Date,
 			default: Date.now(),
 		},
+		resetPasswordToken: {
+			type: String,
+			select: false,
+		},
+		resetPasswordExpire: {
+			type: Date,
+			select: false,
+		},
 		closed: {
 			type: Boolean,
 			default: false,
@@ -112,9 +123,24 @@ UserSchema.methods.matchPassword = async function (password) {
 	return await bcrypt.compare(password, this.password);
 };
 
-UserSchema.pre('save', async function () {
-	const salt = await bcrypt.genSalt(10);
-	this.password = await bcrypt.hash(this.password, salt);
+UserSchema.methods.getResetPasswordToken = function () {
+	const token = crypto.randomBytes(20).toString('hex');
+	this.resetPasswordToken = crypto
+		.createHash('sha256')
+		.update(token)
+		.digest('hex');
+	this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+	return token;
+};
+
+UserSchema.pre('save', async function (next) {
+	if (this.isModified('password')) {
+		const salt = await bcrypt.genSalt(10);
+		this.password = await bcrypt.hash(this.password, salt);
+		this.resetPasswordToken = null;
+		this.resetPasswordExpire = null;
+	}
+	next();
 });
 
 module.exports = mongoose.model('User', UserSchema);
