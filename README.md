@@ -1,11 +1,6 @@
 ## Usage
 Créer un fichier config.env dans le dossier config et remplacer les valeurs entre <   >
-
-PORT = 8000
-DB_STRING = <YOUR_MONDODB_CONNECTION_STRING>
-JWT_EXPIRE = 30d
-JWT_SECRET = <YOUR_JWT_SECRET_KEY>
-MAX_PROFILE_PICTURE_SIZE = 10000000
+![env_config](https://github.com/oumar-barry/Social-network/assets/120862965/85a5d455-7a7f-442a-9885-8b879a5bf494)
 
 ## Installation 
 npm install 
